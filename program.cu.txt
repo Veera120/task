@@ -1,0 +1,92 @@
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <random>
+#include <chrono>
+ 
+const int NUM_BINS = 256;
+const int DATA_SIZE = 1'000'000;  // 1 lakh values
+const int NUM_THREADS = 8;  // Exactly 6 threads
+ 
+// Generate random values from 0 to 255
+void generateData(std::vector<int>& data) {
+    std::mt19937 gen(42);  // fixed seed for repeatability
+    std::uniform_int_distribution<> dis(0, 255);
+    for (int& val : data) {
+        val = dis(gen);
+    }
+}
+ 
+// Sequential histogram computation
+void computeSequential(const std::vector<int>& data, std::vector<int>& histogram) {
+    for (int val : data) {
+        histogram[val]++;
+    }
+}
+ 
+// Thread function for computing part of the histogram
+void computeChunk(const std::vector<int>& data, std::vector<int>& localHist, int start, int end) {
+    for (int i = start; i < end; ++i) {
+        localHist[data[i]]++;
+    }
+}
+ 
+// Multithreaded histogram using 8 threads
+void computeMultithreaded(const std::vector<int>& data, std::vector<int>& histogram) {
+    std::vector<std::thread> threads;
+    std::vector<std::vector<int>> threadHist(NUM_THREADS, std::vector<int>(NUM_BINS, 0));
+ 
+    int chunkSize = data.size() / NUM_THREADS;
+ 
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        int start = i * chunkSize;
+        int end = (i == NUM_THREADS - 1) ? data.size() : start + chunkSize;
+        threads.emplace_back(computeChunk, std::ref(data), std::ref(threadHist[i]), start, end);
+    }
+ 
+    for (auto& t : threads) t.join();
+ 
+    // Merge results from all thread-local histograms
+    for (int bin = 0; bin < NUM_BINS; ++bin) {
+        for (int t = 0; t < NUM_THREADS; ++t) {
+            histogram[bin] += threadHist[t][bin];
+        }
+    }
+}
+ 
+// Time measurement helper
+template <typename Func>
+long long measureTime(Func func) {
+    auto start = std::chrono::high_resolution_clock::now();
+    func();
+    auto end = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+}
+ 
+int main() {
+    std::vector<int> data(DATA_SIZE);
+    generateData(data);
+ 
+    std::vector<int> histSeq(NUM_BINS, 0);
+    std::vector<int> histPar(NUM_BINS, 0);
+ 
+    std::cout << "Running Sequential Histogram...\n";
+    auto timeSeq = measureTime([&]() {
+        computeSequential(data, histSeq);
+    });
+ 
+    std::cout << "Running Multithreaded Histogram (8 threads)...\n";
+    auto timePar = measureTime([&]() {
+        computeMultithreaded(data, histPar);
+    });
+ 
+    // Verify correctness
+    bool same = (histSeq == histPar);
+ 
+    std::cout << "\nSummary:\n";
+    std::cout << "Sequential Time   : " << timeSeq << " ms\n";
+    std::cout << "Multithreaded Time: " << timePar << " ms\n";
+    std::cout << "Histograms Match  : " << (same ? "YES " : "NO ") << "\n";
+ 
+    return 0;
+}
