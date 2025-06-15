@@ -1,28 +1,50 @@
-==============================
 
-Multithreaded Histogram (C++)
-Description:
+# Matrix Class with Operator Overloading (C++)
 
-What This Program Does:
-It creates 1 million random numbers between 0 and 255.
-Then, it counts how many times each number appears (this is called a histogram).
-It does this in two ways:
-One by one (normal way)
-Using 8 threads at the same time (faster way)
-Why Two Ways?
-The first way (sequential) is simple but slow.
-The second way (multithreaded) is faster because it splits the work into 8 parts.
-How It Works:
-Data is generated randomly.
-Histogram is calculated in both ways.
-Time taken by each method is shown.
-It checks if both results are the same.
-How to Run:
-Save the code as histogram.cpp
-Open terminal or command prompt.
-Compile: g++ histogram.cpp -o histogram -std=c++17 -pthread
-Run: ./histogram
-Sample Output:
-Running Sequential Histogram... Running Multithreaded Histogram (8 threads)...
+This project implements a "Matrix class" in C++ using "templates". It supports:
 
-Summary: Sequential Time : 11 ms Multithreaded Time: 1 ms Histograms Match : YES
+- Matrix addition (`+`)
+- Matrix subtraction (`-`)
+- Matrix multiplication (`*`)
+- Matrix printing (`<<`)
+
+#  File Info
+- `Task 1 Matrix Multiplication .cpp` — contains the matrix class and a test function and full version code.
+# Features
+1. Templated Matrix Class  
+- Works with any data type like `int`, `float`
+
+2.Overloaded Operators
+- `+` for matrix addition
+- `-` for matrix subtraction
+- `*` for matrix multiplication
+- `<<` to print matrix using `cout`
+
+3.Function  
+- `fillMatrix()` allows you to fill the matrix like:
+   fillMatrix(A, {1, 2, 3, 4});
+
+# Sample Output
+Matrix A:
+9 6
+3 4
+Matrix B:
+2 4
+7 8
+A + B =
+11 10
+10 12
+
+A - B =
+7 2
+-4 -4
+
+A * B =
+60 84
+34 44
+
+# How to Run (For Assessment Purpose)
+
+1. Go to [OnlineGDB](https://www.onlinegdb.com/online_c++_compiler)
+2. Type code into the editor
+3. Click *Run*
